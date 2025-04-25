@@ -49,3 +49,18 @@ The UI adjusts based on window size, ensuring a responsive design.
 # Popup Dialogs:
 
 Popups for displaying game over messages and theme selection.
+
+# Some screenshots
+
+![Screenshot 2025-04-25 130218](https://github.com/user-attachments/assets/e89928fd-a86a-464c-8c18-e920d52d4b3d)
+![Screenshot 2025-04-25 130238](https://github.com/user-attachments/assets/9c2d9eb6-c040-4ead-b1de-fb66e07af8ce)
+![Screenshot 2025-04-25 130258](https://github.com/user-attachments/assets/b441aab7-bb22-4801-acc8-3e8080ff2be9)
+![Screenshot 2025-04-25 130435](https://github.com/user-attachments/assets/a2af1066-bb26-44d1-ba12-6427bcc15272)
+![Screenshot 2025-04-25 130500](https://github.com/user-attachments/assets/db2b5976-ff12-4a53-b29c-09585a899954)
+
+
+
+
+
+
+
