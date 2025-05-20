@@ -9,27 +9,16 @@ from kivy.uix.label import Label
 from kivy.core.window import Window
 from kivy.core.audio import SoundLoader
 from kivy.uix.scrollview import ScrollView
-from kivy.graphics import Color, Line  # Added import
-from kivy.properties import NumericProperty, ListProperty  # Added import
+from kivy.graphics import Color, Line
+from kivy.properties import NumericProperty, ListProperty
 from kivy.metrics import dp, sp
 from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.config import Config
-
-
-
-
-
-
-
-
-
 class PuzzleApp(App):
-
     class ThemeButton(Button):
         border_width = NumericProperty(0)
-        border_color = ListProperty([0, 0, 0, 1])  # Default border color: white
-
+        border_color = ListProperty([0, 0, 0, 1])
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
             self.bind(
@@ -38,40 +27,33 @@ class PuzzleApp(App):
                 border_width=self._update_border,
                 border_color=self._update_border
             )
-
         def _update_border(self, *args):
             self.canvas.after.clear()
             with self.canvas.after:
                 Color(*self.border_color)
-                Line(width=self.border_width, 
+                Line(width=self.border_width,
                     rectangle=(self.x, self.y, self.width, self.height))
-
     class AnimatedLabel(Label):
         visible_chars = NumericProperty(0)
         full_text = ""
-        
         def start_animation(self, text):
             self.full_text = text
             self.visible_chars = 0
             self._animation_event = Clock.schedule_interval(self.animate_text, 0.1)
-            
         def animate_text(self, dt):
             self.visible_chars += 1
             if self.visible_chars > len(self.full_text):
                 Clock.schedule_once(lambda dt: self.reset_animation(), 1.0)
                 self._animation_event.cancel()
-                
         def reset_animation(self):
             self.visible_chars = 0
             self._animation_event = Clock.schedule_interval(self.animate_text, 0.1)
-            
         def on_visible_chars(self, instance, value):
             self.text = self.full_text[:int(value)]
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Config.setdefaults('puzzle', {'theme': 'Cotton Candy'})
-        theme_name = Config.get('puzzle', 'theme')  # Load saved theme
+        theme_name = Config.get('puzzle', 'theme')
         self.mode = "easy"
         self.themes = [
             {
@@ -217,63 +199,54 @@ class PuzzleApp(App):
         ]
         self.current_theme = self.themes[0]
         self.current_theme = next((t for t in self.themes if t['name'] == theme_name), self.themes[0])
-        self.solved_tiles = list(range(1, 15)) + [None, None] 
+        self.solved_tiles = list(range(1, 15)) + [None, None]
         self.your_moves = 0
         self.initial_tiles = []
         self.initial_remaining_moves = 0
         Window.clearcolor = self.current_theme['bg_color']
         self.setup_puzzle()
-
     def build(self):
         self.setup_puzzle()
         self.sound = SoundLoader.load(r"assets/click.wav")
         self.buttons = []
-
-        # Root layout
         self.root = BoxLayout(orientation="vertical", padding=dp(10), spacing=dp(10))
-        
         game_over_layout = BoxLayout(
             orientation="horizontal",
             size_hint=(1, None),
             height=dp(50),
             spacing=dp(8),
-            padding=[dp(20), 0, dp(20), 0] 
+            padding=[dp(20), 0, dp(20), 0]
         )
-
         self.remaining_moves_label = Label(
             text=f"Remaining Moves: {self.remaining_moves}",
             font_size=sp(16),
             size_hint_x = 0.5,
             halign='left',
-            color = '#d20000',   
+            color = '#d20000',
             bold = True,
             text_size=(None, None),
             valign='center',
             padding=[dp(10), 0]
         )
         self.remaining_moves_label.bind(size=self.remaining_moves_label.setter('text_size'))
-
         self.your_moves_label = Label(
             text=f"Your Moves: {self.your_moves}",
             font_size=sp(16),
             size_hint_x=0.5,
             halign='right',
-            color =  self.current_theme['your_moves_label_color'],   
+            color =  self.current_theme['your_moves_label_color'],
             bold = True,
             text_size=(None, None),
             valign='center',
-            padding=[0, 0, dp(10), 0] 
+            padding=[0, 0, dp(10), 0]
         )
         self.your_moves_label.bind(size=self.your_moves_label.setter('text_size'))
-
-        # Mode buttons
         top_buttons = BoxLayout(
             orientation="horizontal",
             size_hint=(1, None),
             height=dp(50),
             spacing=dp(10)
         )
-
         self.easy_mode_button = self.ThemeButton(
             text="EASY",
             size_hint=(1, None),
@@ -283,7 +256,6 @@ class PuzzleApp(App):
             border_width=2 if self.mode == "easy" else 0,
             background_normal='',
             on_press=lambda x: self.switch_mode("easy"))
-        
         self.hard_mode_button = self.ThemeButton(
             text="HARD",
             size_hint=(1, None),
@@ -293,17 +265,14 @@ class PuzzleApp(App):
             border_width=2 if self.mode == "easy" else 0,
             background_normal='',
             on_press=lambda x: self.switch_mode("hard"))
-        
         next_button = Button(
             text="NEXT",
             background_color=(0.6, 1, 0.6, 1),
             on_press=self.next_puzzle)
-        
         theme_btn = Button(
             text="Themes",
             background_color='#45bada',
             on_press=self.open_theme)
-        
         top_buttons.add_widget(self.easy_mode_button)
         top_buttons.add_widget(self.hard_mode_button)
         top_buttons.add_widget(next_button)
@@ -312,20 +281,16 @@ class PuzzleApp(App):
         game_over_layout.add_widget(self.your_moves_label)
         self.root.add_widget(game_over_layout)
         self.root.add_widget(top_buttons)
-
-        # Puzzle grid
         self.grid = GridLayout(cols=4, spacing=dp(5), padding=dp(5), size_hint=(1, 0.8))
         for i in range(16):
             btn = self.ThemeButton(font_size=sp(18), size_hint=(1, 1))
             btn.bind(on_press=lambda instance, i=i: self.tile_click(i))
             self.grid.add_widget(btn)
             self.buttons.append(btn)
-        
         self.root.add_widget(self.grid)
         self.update_buttons()
         self.update_mode_buttons()
         return self.root
-
     def update_buttons(self):
         for i, val in enumerate(self.tiles):
             btn = self.buttons[i]
@@ -342,7 +307,6 @@ class PuzzleApp(App):
                 rgb = self.hex_to_rgb(hex_color)
                 btn.background_color = rgb + [1]
                 btn.color = (1, 1, 1, 1)
-
     def tile_click(self, index):
         if self.mode == "easy":
             blank_indices = [i for i, x in enumerate(self.tiles) if x is None]
@@ -354,7 +318,6 @@ class PuzzleApp(App):
             blank_index = self.tiles.index(None)
             if self.can_swap(index, blank_index):
                 self.swap_tiles(index, blank_index)
-
     def swap_tiles(self, a, b):
         self.tiles[b], self.tiles[a] = self.tiles[a], self.tiles[b]
         threading.Thread(target=self.play_sound, daemon=True).start()
@@ -366,7 +329,6 @@ class PuzzleApp(App):
         solved = self.check_solution()
         if not solved and self.remaining_moves <= 0:
             self.show_game_over_popup()
-    
     def check_solution(self):
         solved = False
         if self.mode == "easy" and self.tiles == self.solved_tiles:
@@ -378,12 +340,10 @@ class PuzzleApp(App):
             self.show_popup("Solved!", "Congratulations!", on_close=self.load_new_puzzle)
             solved = True
         return solved
-    
     def can_swap(self, idx1, idx2):
         row1, col1 = divmod(idx1, 4)
         row2, col2 = divmod(idx2, 4)
         return abs(row1 - row2) + abs(col1 - col2) == 1
-
     def is_solvable(self):
         tiles = [x for x in self.tiles if x is not None]
         inv_count = 0
@@ -391,22 +351,18 @@ class PuzzleApp(App):
             for j in range(i + 1, len(tiles)):
                 if tiles[i] > tiles[j]:
                     inv_count += 1
-        
         if self.mode == "easy":
             blank_row = (self.tiles.index(None) // 4)
             return (inv_count + blank_row) % 2 == 0
         else:
             blank_row = 3 - (self.tiles.index(None) // 4)
             return (inv_count + blank_row) % 2 == 0
-       
     def next_puzzle(self, instance):
         self.setup_puzzle()
         self.update_buttons()
-
     def load_new_puzzle(self):
         self.setup_puzzle()
         self.update_buttons()
-
     def show_popup(self, title, message, on_close=None):
         label = self.AnimatedLabel(
             text_size=(None, None),
@@ -415,39 +371,29 @@ class PuzzleApp(App):
             font_size=sp(24)
         )
         label.start_animation(message)
-        
-        # Create popup
         popup = Popup(
             title=title,
             content=label,
             size_hint=(0.7, 0.4),
             auto_dismiss=True
         )
-        
-        # Stop animation when popup closes
         def handle_dismiss(instance):
             Clock.unschedule(label._animation_event)
             if on_close:
                 on_close()
-
         popup.bind(on_dismiss=handle_dismiss)
         popup.open()
-
     def play_sound(self):
         if self.sound:
             self.sound.play()
-
     def hex_to_rgb(self, hex_color):
         return [int(hex_color[i:i + 2], 16) / 255 for i in (1, 3, 5)]
-
     def open_theme(self, instance):
         content = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(10))
         scroll = ScrollView()
         theme_grid = GridLayout(cols=1, spacing=5, size_hint_y=None)
         theme_grid.bind(minimum_height=theme_grid.setter('height'))
-
         for theme in self.themes:
-            # Use ThemeButton instead of regular Button
             btn = self.ThemeButton(
                 text=theme['name'],
                 size_hint_y=None,
@@ -455,41 +401,32 @@ class PuzzleApp(App):
                 background_color=theme['bg_color'],
                 on_press=lambda x, t=theme: self.apply_theme(t)
             )
-            # Add border if this is the current theme
             if theme == self.current_theme:
-                btn.border_width = 2  # Set border width
-                btn.border_color = (1,1,1,1)  # White border
+                btn.border_width = 2
+                btn.border_color = (1,1,1,1)
             theme_grid.add_widget(btn)
-
         scroll.add_widget(theme_grid)
         content.add_widget(scroll)
-        
         close_btn = Button(text="Close", size_hint=(1, None), height=40)
         close_btn.bind(on_press=lambda x: self.popup.dismiss())
         content.add_widget(close_btn)
-
         self.popup = Popup(title='Choose Theme', content=content,
                           size_hint=(0.7, 0.8))
         self.popup.open()
-
     def apply_theme(self, theme):
         self.current_theme = theme
         Window.clearcolor = theme['bg_color']
-        Config.set('puzzle', 'theme', theme['name'])  # Save selected theme
+        Config.set('puzzle', 'theme', theme['name'])
         Config.write()
         self.update_buttons()
         self.popup.dismiss()
-
     def on_start(self):
         Window.bind(on_resize=self.update_layout)
-        
     def update_layout(self, *args):
         for btn in self.buttons:
-            btn.font_size = sp(Window.width * 0.06)  # Example dynamic sizing
-
+            btn.font_size = sp(Window.width * 0.06)
     def is_puzzle_solved(self):
         return self.tiles[:-1] == list(range(1, 16))
-
     def get_adjacent_indices(self, index):
         row, col = divmod(index, 4)
         indices = []
@@ -502,7 +439,6 @@ class PuzzleApp(App):
         if col < 3:
             indices.append(index + 1)
         return indices
-
     def find_solving_move(self):
         blank_indices = [i for i, x in enumerate(self.tiles) if x is None]
         for blank in blank_indices:
@@ -513,15 +449,11 @@ class PuzzleApp(App):
                     if temp == self.solved_tiles:
                         return idx
         return None
-        
     def highlight_suggestion(self, tile_index):
         btn = self.buttons[tile_index]
-        Animation.cancel_all(btn)  # Stop existing animations
-
-        # Ensure the button has border properties
+        Animation.cancel_all(btn)
         btn.border_width = 0
         btn.border_color = [1, 1, 0, 1]
-
         def animate_border(*args):
             btn.border_width = 0
             anim = (
@@ -530,9 +462,7 @@ class PuzzleApp(App):
             )
             anim.repeat = True
             anim.start(btn)
-
         animate_border()
-
     def setup_puzzle(self):
         if self.mode == "easy":
             self.solved_tiles = list(range(1, 15)) + [None, None]
@@ -549,7 +479,6 @@ class PuzzleApp(App):
         self.your_moves = 0
         if hasattr(self, 'remaining_moves_label'):
             self.update_labels()
-
     def switch_mode(self, mode):
         self.mode = mode
         self.setup_puzzle()
@@ -557,40 +486,22 @@ class PuzzleApp(App):
         self.update_mode_buttons()
         self.easy_mode_button.border_width = 2 if self.mode == "easy" else 0
         self.hard_mode_button.border_width = 2 if self.mode == "hard" else 0
-
     def update_mode_buttons(self):
-
         self.easy_mode_button.border_width = 2 if self.mode == "easy" else 0
         self.hard_mode_button.border_width = 2 if self.mode == "hard" else 0
-
         self.easy_mode_button.background_color = 'green' if self.mode == "easy" else 'red'
         self.hard_mode_button.background_color = 'green' if self.mode == "hard" else 'red'
-
     def show_game_over_popup(self):
         SoundLoader.load(r"assets/game_over.wav").play()
         self.show_popup("Game Over", "OUT OF MOVES!\nTRY AGAIN...", on_close=self.reset_puzzle)
-
     def reset_puzzle(self):
         self.tiles = self.initial_tiles.copy()
         self.remaining_moves = self.initial_remaining_moves
         self.your_moves = 0
         self.update_labels()
         self.update_buttons()
-
     def update_labels(self):
         self.remaining_moves_label.text = f"Remaining Moves: {self.remaining_moves}"
         self.your_moves_label.text = f"Your Moves: {self.your_moves}"
-
-
-
-
-
-
-
-
-
-
-
-
 if __name__ == '__main__':
     PuzzleApp().run()
