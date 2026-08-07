@@ -59,5 +59,3 @@ Popups for displaying game over messages and theme selection.
 ![Screenshot 2025-04-25 130500](https://github.com/user-attachments/assets/db2b5976-ff12-4a53-b29c-09585a899954)
 
 
-<!-- AUTO UPDATE -->
-Last maintenance: 2026-08-07 07:21 UTC
